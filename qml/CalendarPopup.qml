@@ -81,30 +81,17 @@ ControlCenterDialog {
         id: windowHelper
     }
 
-    LingmoUI.WindowBlur {
-        view: control
-        geometry: Qt.rect(control.x, control.y, control.width, control.height)
-        windowRadius: _background.radius
-        enabled: true
-    }
-
     LingmoUI.WindowShadow {
         view: control
         geometry: Qt.rect(control.x, control.y, control.width, control.height)
         radius: _background.radius
     }
 
-    Rectangle {
+    // "Vidro Lingmo" (Settings > Appearance > Glass); solid without glass
+    LingmoUI.GlassSurface {
         id: _background
-        width: control.width
-        height: control.height
-        radius: windowHelper.compositing ? LingmoUI.Theme.bigRadius * 1.5 : 0
-        color: LingmoUI.Theme.darkMode ? "#4D4D4D" : "#F0F0F0"
-        opacity: windowHelper.compositing ? LingmoUI.Theme.darkMode ? 0.6 : 0.8 : 1.0
-        antialiasing: true
-        border.width: 1 / Screen.devicePixelRatio
-        border.pixelAligned: Screen.devicePixelRatio > 1 ? false : true
-        border.color: control.borderColor
+        anchors.fill: parent
+        radius: LingmoUI.Theme.compositing ? LingmoUI.Theme.bigRadius * 1.5 : 0
     }
 
     component NavButton: Item {

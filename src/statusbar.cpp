@@ -167,8 +167,8 @@ void StatusBar::updateGeometry()
     QRect windowRect = QRect(rect.x(), rect.y(), rect.width(), m_barHeight);
     setGeometry(windowRect);
     updateViewStruts();
-
-    KWindowEffects::enableBlurBehind(fromWinId(winId()), true);
+    // The blur behind the bar is asked for by its glass (qml/main.qml,
+    // LingmoUI.GlassSurface), which drops it with Glass off or no compositor
 }
 
 void StatusBar::updateViewStruts()

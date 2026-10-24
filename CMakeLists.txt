@@ -66,6 +66,10 @@ set(SRCS
     src/poweractions.cpp
 
     qml.qrc
+
+    # Island: live activities (com.lingmo.Island, docs/island-api.md)
+    src/island/islandmanager.cpp
+    island.qrc
 )
 
 set(statusnotifierwatcher_xml src/systemtray/org.kde.StatusNotifierWatcher.xml)
@@ -129,4 +133,5 @@ qt_add_translation(QM_FILES ${ts_files_replaced})
 add_custom_target(translations ALL DEPENDS ${QM_FILES} SOURCES ${ts_files_replaced})
 
 install(TARGETS lingmo-statusbar RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(PROGRAMS src/island/lingmo-island DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES ${QM_FILES} DESTINATION /usr/share/lingmo-statusbar/translations)

@@ -31,8 +31,11 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: LingmoUI.Theme.bigRadius
-        color: LingmoUI.Theme.secondBackgroundColor
-        opacity: LingmoUI.Theme.darkMode ? 0.45 : 0.7
+        // A raised pane on the glass (solid card without glass)
+        color: LingmoUI.Theme.glassEnabled ? LingmoUI.Theme.glassRaisedColor : LingmoUI.Theme.secondBackgroundColor
+        border.width: LingmoUI.Theme.glassEnabled ? 1 : 0
+        border.color: LingmoUI.Theme.glassBorderColor
+        opacity: LingmoUI.Theme.glassEnabled ? 1 : (LingmoUI.Theme.darkMode ? 0.45 : 0.7)
 
         Behavior on color {
             ColorAnimation { duration: 200; easing.type: Easing.Linear }

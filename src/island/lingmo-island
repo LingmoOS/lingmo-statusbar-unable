@@ -1,0 +1,177 @@
+#!/bin/bash
+# lingmo-island: start, update and finish live activities in the status bar's
+# Island from scripts (com.lingmo.Island, see docs/island-api.md).
+#
+#   id=$(lingmo-island start --kind transfer --title "Backup" --progress 0 --action cancel=Cancel)
+#   lingmo-island update "$id" --progress 0.5 --subtitle "50 of 100 files"
+#   lingmo-island finish "$id" "Backup done"
+
+set -u
+
+DEST=com.lingmo.Island
+OBJ=/Island
+IFACE=com.lingmo.Island
+
+usage() {
+    cat <<'USAGE'
+Usage:
+  lingmo-island start  [options]            print the new activity's id
+  lingmo-island update ID [options]
+  lingmo-island finish ID [MESSAGE]         MESSAGE shows for a moment ("Done")
+  lingmo-island dismiss ID
+  lingmo-island list
+  lingmo-island wait-action ID              wait for a click on an action, print its id
+  lingmo-island watch                       print "ID ACTION" for every click
+
+Options for start and update:
+  --app ID            application id (default: lingmo-island)
+  --kind KIND         timer, stopwatch, recording, media, transfer, render,
+                      mail, workflow, call, generic (default: generic)
+  --title TEXT
+  --subtitle TEXT
+  --icon NAME         icon from the icon theme
+  --progress N        0..1, or -1 for no bar
+  --action ID=LABEL   a button (repeat for more); known ids get an icon:
+                      pause resume play stop next previous cancel open reply
+  --start-now         count the elapsed time from now
+  --end-in SECONDS    count down to now + SECONDS
+  --hint KEY=VALUE    any hint (true/false and numbers are typed), repeatable
+USAGE
+}
+
+die() { echo "lingmo-island: $*" >&2; exit 1; }
+
+command -v gdbus >/dev/null 2>&1 || die "gdbus not found (glib2)"
+
+# GVariant text literal for a string
+gstr() {
+    local s=${1//\\/\\\\}
+    s=${s//\'/\\\'}
+    printf "'%s'" "$s"
+}
+
+# GVariant text for a hint value: booleans and numbers keep their type
+gval() {
+    case "$1" in
+        true|false) printf '<%s>' "$1" ;;
+        ''|*[!0-9.-]*) printf '<%s>' "$(gstr "$1")" ;;
+        *) printf '<%s>' "$(awk -v v="$1" 'BEGIN { if (v ~ /\./) printf "%s", v; else printf "%s.0", v }')" ;;
+    esac
+}
+
+# A double for gdbus (it wants the dot)
+gnum() { case "$1" in *.*|*e*) printf '%s' "$1" ;; *) printf '%s.0' "$1" ;; esac; }
+
+now_ms() { echo $(( $(date +%s%N) / 1000000 )); }
+
+APP=lingmo-island KIND="" TITLE="" SUBTITLE="" ICON="" PROGRESS=""
+ACTIONS=() HINTS=() SET_TITLE=0 SET_SUBTITLE=0 SET_ICON=0 SET_ACTIONS=0
+
+parse_options() {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --app) APP=$2; shift ;;
+            --kind) KIND=$2; shift ;;
+            --title) TITLE=$2; SET_TITLE=1; shift ;;
+            --subtitle) SUBTITLE=$2; SET_SUBTITLE=1; shift ;;
+            --icon) ICON=$2; SET_ICON=1; shift ;;
+            --progress) PROGRESS=$2; shift ;;
+            --action) ACTIONS+=("${2%%=*}" "${2#*=}"); SET_ACTIONS=1; shift ;;
+            --start-now) HINTS+=("'startTime': <$(now_ms).0>") ;;
+            --end-in) HINTS+=("'endTime': <$(( $(now_ms) + ${2%.*} * 1000 )).0>"); shift ;;
+            --hint) HINTS+=("$(gstr "${2%%=*}"): $(gval "${2#*=}")"); shift ;;
+            -h|--help) usage; exit 0 ;;
+            *) die "unknown option: $1" ;;
+        esac
+        shift
+    done
+}
+
+actions_literal() {
+    local out="" a
+    for a in "${ACTIONS[@]+"${ACTIONS[@]}"}"; do
+        out+="${out:+, }$(gstr "$a")"
+    done
+    printf '@as [%s]' "$out"
+}
+
+hints_literal() {
+    local out="" h
+    for h in "${HINTS[@]+"${HINTS[@]}"}"; do
+        out+="${out:+, }$h"
+    done
+    printf '@a{sv} {%s}' "$out"
+}
+
+call() {
+    gdbus call --session --dest "$DEST" --object-path "$OBJ" --method "$IFACE.$1" -- "${@:2}" \
+        || die "the status bar's Island is not running"
+}
+
+wait_action() {
+    local want=$1
+    gdbus monitor --session --dest "$DEST" --object-path "$OBJ" 2>/dev/null | \
+    while IFS= read -r line; do
+        case "$line" in
+            *"$IFACE.ActionInvoked"*)
+                # /Island: com.lingmo.Island.ActionInvoked (uint32 5, 'stop')
+                id=$(sed -n "s/.*(uint32 \([0-9]*\), '\(.*\)')$/\1/p" <<<"$line")
+                action=$(sed -n "s/.*(uint32 \([0-9]*\), '\(.*\)')$/\2/p" <<<"$line")
+                if [ -z "$want" ]; then
+                    echo "$id $action"
+                elif [ "$id" = "$want" ]; then
+                    echo "$action"
+                    pkill -P $$ gdbus 2>/dev/null
+                    exit 0
+                fi ;;
+            *"$IFACE.Closed (uint32 $want,)"*)
+                [ -n "$want" ] && { pkill -P $$ gdbus 2>/dev/null; exit 1; } ;;
+        esac
+    done
+}
+
+cmd=${1:-}
+[ $# -gt 0 ] && shift
+
+case "$cmd" in
+    start)
+        parse_options "$@"
+        # Each gdbus call is its own short connection: keep the activity
+        # until finish/dismiss instead of tying it to that connection
+        HINTS+=("'persistent': <true>")
+        out=$(call StartWithHints "$(gstr "$APP")" "$(gstr "${KIND:-generic}")" "$(gstr "$TITLE")" \
+              "$(gstr "$SUBTITLE")" "$(gstr "$ICON")" "$(gnum "${PROGRESS:--1}")" \
+              "$(actions_literal)" "$(hints_literal)") || exit 1
+        id=$(sed -n 's/^(uint32 \([0-9]*\),)$/\1/p' <<<"$out")
+        [ -n "$id" ] && [ "$id" != 0 ] || die "could not start: $out"
+        echo "$id" ;;
+    update)
+        id=${1:-}; [ -n "$id" ] || die "update needs an id"; shift
+        parse_options "$@"
+        [ "$SET_TITLE" = 1 ] && HINTS+=("'title': <$(gstr "$TITLE")>")
+        [ "$SET_SUBTITLE" = 1 ] && HINTS+=("'subtitle': <$(gstr "$SUBTITLE")>")
+        [ "$SET_ICON" = 1 ] && HINTS+=("'iconName': <$(gstr "$ICON")>")
+        [ -n "$KIND" ] && HINTS+=("'kind': <$(gstr "$KIND")>")
+        [ -n "$PROGRESS" ] && HINTS+=("'progress': <$(gnum "$PROGRESS")>")
+        [ "$SET_ACTIONS" = 1 ] && HINTS+=("'actions': <$(actions_literal)>")
+        out=$(call UpdateFields "$id" "$(hints_literal)") || exit 1
+        [ "$out" = "(true,)" ] || die "no activity $id" ;;
+    finish)
+        id=${1:-}; [ -n "$id" ] || die "finish needs an id"
+        out=$(call Finish "$id" "$(gstr "${2:-}")") || exit 1
+        [ "$out" = "(true,)" ] || die "no activity $id" ;;
+    dismiss)
+        id=${1:-}; [ -n "$id" ] || die "dismiss needs an id"
+        call Dismiss "$id" >/dev/null ;;
+    list)
+        call List ;;
+    wait-action)
+        [ -n "${1:-}" ] || die "wait-action needs an id"
+        wait_action "$1" ;;
+    watch)
+        wait_action "" ;;
+    -h|--help|help|"")
+        usage ;;
+    *)
+        die "unknown command: $cmd (see --help)" ;;
+esac

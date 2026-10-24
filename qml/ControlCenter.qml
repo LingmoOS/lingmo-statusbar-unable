@@ -154,36 +154,17 @@ ControlCenterDialog {
         id: currentUser
     }
 
-    LingmoUI.WindowBlur {
-        view: control
-        geometry: Qt.rect(control.x, control.y, control.width, control.height)
-        windowRadius: _background.radius
-        enabled: true
-    }
-
     LingmoUI.WindowShadow {
         view: control
         geometry: Qt.rect(control.x, control.y, control.width, control.height)
         radius: _background.radius
     }
 
-    Rectangle {
+    // "Vidro Lingmo" (Settings > Appearance > Glass); solid without glass
+    LingmoUI.GlassSurface {
         id: _background
         anchors.fill: parent
-        radius: windowHelper.compositing ? LingmoUI.Theme.bigRadius * 1.5 : 0
-        color: LingmoUI.Theme.backgroundColor
-        opacity: windowHelper.compositing ? LingmoUI.Theme.darkMode ? 0.7 : 0.8 : 1.0
-        antialiasing: true
-        border.width: 1 / Screen.devicePixelRatio
-        border.pixelAligned: Screen.devicePixelRatio > 1 ? false : true
-        border.color: control.borderColor
-
-        Behavior on color {
-            ColorAnimation {
-                duration: 200
-                easing.type: Easing.Linear
-            }
-        }
+        radius: LingmoUI.Theme.compositing ? LingmoUI.Theme.bigRadius * 1.5 : 0
     }
 
     FontMetrics {

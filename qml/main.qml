@@ -26,6 +26,8 @@ import Lingmo.StatusBar 1.0
 import Lingmo.NetworkManagement 1.0 as NM
 import LingmoUI.CompatibleModule 3.0 as LingmoUI
 
+import "island"
+
 Item {
     id: rootItem
 
@@ -75,18 +77,18 @@ Item {
     //     }
     // }
 
-    // Translucent over the blurred wallpaper when there is a compositor (KWin blurs
-    // behind the bar, see StatusBar::updateGeometry), solid without one. Opaque
-    // enough that the text keeps its contrast over any wallpaper.
-    Rectangle {
+    // "Vidro Lingmo" (Settings > Appearance > Glass): tint, grain and soft light
+    // over KWin's blur of the wallpaper; a solid bar with Glass off or without
+    // a compositor. The tint is never thinner than 0.72 here so the text keeps
+    // its contrast over any wallpaper.
+    LingmoUI.GlassSurface {
         id: background
         anchors.fill: parent
-        color: LingmoUI.Theme.backgroundColor
-        opacity: windowHelper.compositing ? (rootItem.darkMode ? 0.72 : 0.78) : 1.0
-
-        Behavior on color {
-            ColorAnimation { duration: 200; easing.type: Easing.Linear }
-        }
+        radius: 0
+        borderVisible: false
+        highlightVisible: false
+        sheenEnabled: false
+        tintOpacity: Math.max(LingmoUI.Theme.glassOpacity, rootItem.darkMode ? 0.62 : 0.66)
     }
 
     // Hairline separating the bar from the desktop
@@ -195,6 +197,14 @@ Item {
             ListView {
                 id: appMenuView
                 anchors.fill: parent
+                // Stop before the Island in the middle of the bar
+                // (mirrored with RTL: then it keeps clear of the Island's other side)
+                anchors.rightMargin: !island.visible ? 0
+                    : rootItem.LayoutMirroring.enabled
+                      ? Math.max(0, island.x + island.width + LingmoUI.Units.smallSpacing
+                                    - (LingmoUI.Units.smallSpacing + appMenuItem.x))
+                      : Math.max(0, LingmoUI.Units.smallSpacing + appMenuItem.x + appMenuItem.width
+                                    - island.x + LingmoUI.Units.smallSpacing)
                 orientation: Qt.Horizontal
                 spacing: LingmoUI.Units.smallSpacing
                 visible: appMenuModel.visible
@@ -626,6 +636,13 @@ Item {
             }
         }
 
+    }
+
+    // Island: live activities (timers, recording, music, copies...) in the middle
+    Island {
+        id: island
+        anchors.centerIn: parent
+        barHeight: rootItem.height
     }
 
     MouseArea {

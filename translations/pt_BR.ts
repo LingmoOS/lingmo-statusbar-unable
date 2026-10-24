@@ -4,7 +4,7 @@
 <context>
     <name>CalendarPopup</name>
     <message>
-        <location filename="../qml/CalendarPopup.qml" line="+180"/>
+        <location filename="../qml/CalendarPopup.qml" line="+167"/>
         <source>Today</source>
         <translation>Hoje</translation>
     </message>
@@ -12,42 +12,42 @@
 <context>
     <name>ControlCenter</name>
     <message>
-        <location filename="../qml/ControlCenter.qml" line="+249"/>
+        <location filename="../qml/ControlCenter.qml" line="+236"/>
         <source>Wi-Fi</source>
         <translation>Wi-Fi</translation>
     </message>
     <message>
-        <location line="-71"/>
+        <location line="-43"/>
         <source>Control Center</source>
         <translation>Central de controle</translation>
     </message>
     <message>
-        <location line="+86"/>
+        <location line="+57"/>
         <source>Bluetooth</source>
         <translation>Bluetooth</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+15"/>
         <source>Dark Mode</source>
         <translation>Modo escuro</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+11"/>
         <source>Night Light</source>
         <translation>Luz noturna</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+13"/>
         <source>Do Not Disturb</source>
         <translation>Não perturbe</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+20"/>
         <source>Screenshot</source>
         <translation>Captura de tela</translation>
     </message>
     <message>
-        <location line="+86"/>
+        <location line="+73"/>
         <source>Connecting…</source>
         <translation>Conectando…</translation>
     </message>
@@ -62,34 +62,80 @@
         <translation>Cabeada</translation>
     </message>
     <message>
+        <location line="-83"/>
         <source>Airplane Mode</source>
         <translation>Modo avião</translation>
     </message>
     <message>
+        <location line="+192"/>
+        <location line="+15"/>
         <source>Output device</source>
         <translation>Dispositivo de saída</translation>
     </message>
     <message>
+        <location line="+132"/>
         <source>Battery settings</source>
         <translation>Configurações de bateria</translation>
     </message>
     <message>
+        <location line="+43"/>
         <source>Power Saver</source>
         <translation>Economia</translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>Balanced</source>
         <translation>Equilibrado</translation>
     </message>
     <message>
+        <location line="-1"/>
         <source>Performance</source>
         <translation>Desempenho</translation>
     </message>
 </context>
 <context>
+    <name>Island</name>
+    <message>
+        <location filename="../qml/island/Island.qml" line="+291"/>
+        <source>+%1</source>
+        <translation>+%1</translation>
+    </message>
+</context>
+<context>
+    <name>IslandExpanded</name>
+    <message>
+        <location filename="../qml/island/IslandExpanded.qml" line="+156"/>
+        <source>Hide</source>
+        <translation>Ocultar</translation>
+    </message>
+</context>
+<context>
+    <name>IslandMedia</name>
+    <message>
+        <location filename="../qml/island/IslandMedia.qml" line="+88"/>
+        <source>Previous</source>
+        <translation>Anterior</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Pause</source>
+        <translation>Pausar</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Play</source>
+        <translation>Reproduzir</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Next</source>
+        <translation>Próxima</translation>
+    </message>
+</context>
+<context>
     <name>ShutdownDialog</name>
     <message>
-        <location filename="../qml/ShutdownDialog.qml" line="+140"/>
+        <location filename="../qml/ShutdownDialog.qml" line="+121"/>
         <source>Shutdown</source>
         <translation>Desligar</translation>
     </message>
@@ -130,12 +176,12 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../qml/main.qml" line="+117"/>
+        <location filename="../qml/main.qml" line="+131"/>
         <source>Close</source>
         <translation>Fechar</translation>
     </message>
     <message>
-        <location line="+180"/>
+        <location line="+191"/>
         <source>is using the camera</source>
         <translation>está usando a câmera</translation>
     </message>
@@ -145,7 +191,7 @@
         <translation>Spotlight</translation>
     </message>
     <message>
-        <location line="+366"/>
+        <location line="+376"/>
         <source>Open Spotlight</source>
         <translation>Abrir o Spotlight</translation>
     </message>
@@ -190,14 +236,17 @@
         <translation>Configurações do teclado…</translation>
     </message>
     <message>
+        <location line="-738"/>
         <source>Minimize</source>
         <translation>Minimizar</translation>
     </message>
     <message>
+        <location line="+6"/>
         <source>Maximize / Restore</source>
         <translation>Maximizar / Restaurar</translation>
     </message>
     <message>
+        <location line="+8"/>
         <source>Quit %1</source>
         <translation>Encerrar %1</translation>
     </message>
