@@ -134,4 +134,15 @@ add_custom_target(translations ALL DEPENDS ${QM_FILES} SOURCES ${ts_files_replac
 
 install(TARGETS lingmo-statusbar RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(PROGRAMS src/island/lingmo-island DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# Lingmo Intents: island.start / island.update / island.finish on com.lingmo.Island /Intents
+find_package(LingmoIntents 1.0 QUIET)
+if(LingmoIntents_FOUND)
+    target_sources(lingmo-statusbar PRIVATE src/island/islandintents.cpp src/island/islandintents.h)
+    target_compile_definitions(lingmo-statusbar PRIVATE HAVE_LINGMO_INTENTS)
+    target_link_libraries(lingmo-statusbar PRIVATE LingmoIntents::LingmoIntents)
+    lingmo_install_intents(MANIFEST data/intents/lingmo-statusbar.json)
+else()
+    message(WARNING "LingmoIntents not found: the status bar is built without app actions (intents)")
+endif()
 install(FILES ${QM_FILES} DESTINATION /usr/share/lingmo-statusbar/translations)

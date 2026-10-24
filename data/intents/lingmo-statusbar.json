@@ -1,0 +1,259 @@
+{
+  "format": "lingmo-intents",
+  "version": 1,
+  "app": "lingmo-statusbar",
+  "name": {
+    "en": "Island",
+    "pt_BR": "Ilha"
+  },
+  "icon": "preferences-system-notifications",
+  "dbus": {
+    "service": "com.lingmo.Island",
+    "path": "/Intents"
+  },
+  "intents": [
+    {
+      "id": "island.start",
+      "title": {
+        "en": "Show a live activity",
+        "pt_BR": "Mostrar atividade ao vivo"
+      },
+      "description": {
+        "en": "Shows a live activity in the Island of the status bar (progress, timer, workflow…).",
+        "pt_BR": "Mostra uma atividade ao vivo na Ilha da barra de status (progresso, timer, fluxo…)."
+      },
+      "summary": {
+        "en": "Show “{title}” in the Island",
+        "pt_BR": "Mostrar «{title}» na Ilha"
+      },
+      "icon": "view-presentation",
+      "capabilities": [
+        "create"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "generic",
+              "workflow",
+              "transfer",
+              "render",
+              "timer",
+              "recording",
+              "mail"
+            ],
+            "default": "generic",
+            "title": {
+              "en": "Kind",
+              "pt_BR": "Tipo"
+            }
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "title": {
+              "en": "Title",
+              "pt_BR": "Título"
+            },
+            "minLength": 1
+          },
+          "subtitle": {
+            "type": "string",
+            "maxLength": 300,
+            "default": "",
+            "title": {
+              "en": "Subtitle",
+              "pt_BR": "Subtítulo"
+            }
+          },
+          "icon": {
+            "type": "string",
+            "maxLength": 100,
+            "default": "",
+            "pattern": "[A-Za-z0-9_.-]*",
+            "title": {
+              "en": "Icon name",
+              "pt_BR": "Nome do ícone"
+            }
+          },
+          "progress": {
+            "type": "number",
+            "minimum": -1,
+            "maximum": 1,
+            "default": -1,
+            "title": {
+              "en": "Progress (0 to 1; -1 = none)",
+              "pt_BR": "Progresso (0 a 1; -1 = nenhum)"
+            }
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": {
+              "en": "Activity id",
+              "pt_BR": "Id da atividade"
+            }
+          }
+        }
+      },
+      "examples": {
+        "pt_BR": [
+          "mostrar na ilha {title}",
+          "atividade ao vivo {title}"
+        ],
+        "en": [
+          "show in the island {title}",
+          "live activity {title}"
+        ]
+      }
+    },
+    {
+      "id": "island.update",
+      "title": {
+        "en": "Update a live activity",
+        "pt_BR": "Atualizar atividade ao vivo"
+      },
+      "description": {
+        "en": "Changes the title, subtitle or progress of an activity started with “Show a live activity”.",
+        "pt_BR": "Muda título, subtítulo ou progresso de uma atividade iniciada com “Mostrar atividade ao vivo”."
+      },
+      "icon": "view-refresh",
+      "capabilities": [
+        "create"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "title": {
+              "en": "Activity id",
+              "pt_BR": "Id da atividade"
+            }
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "title": {
+              "en": "Title",
+              "pt_BR": "Título"
+            },
+            "default": ""
+          },
+          "subtitle": {
+            "type": "string",
+            "maxLength": 300,
+            "default": "",
+            "title": {
+              "en": "Subtitle",
+              "pt_BR": "Subtítulo"
+            }
+          },
+          "progress": {
+            "type": "number",
+            "minimum": -2,
+            "maximum": 1,
+            "default": -2,
+            "title": {
+              "en": "Progress (0 to 1; -1 = none; -2 = keep)",
+              "pt_BR": "Progresso (0 a 1; -1 = nenhum; -2 = manter)"
+            }
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": {
+              "en": "Activity id",
+              "pt_BR": "Id da atividade"
+            }
+          }
+        }
+      },
+      "examples": {
+        "pt_BR": [
+          "atualizar a ilha {id}"
+        ],
+        "en": [
+          "update island activity {id}"
+        ]
+      }
+    },
+    {
+      "id": "island.finish",
+      "title": {
+        "en": "Finish a live activity",
+        "pt_BR": "Concluir atividade ao vivo"
+      },
+      "description": {
+        "en": "Shows ✓ with a message for a moment and removes the activity.",
+        "pt_BR": "Mostra ✓ com uma mensagem por um instante e remove a atividade."
+      },
+      "icon": "dialog-ok",
+      "capabilities": [
+        "create"
+      ],
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "title": {
+              "en": "Activity id",
+              "pt_BR": "Id da atividade"
+            }
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 200,
+            "default": "Concluído",
+            "title": {
+              "en": "Message",
+              "pt_BR": "Mensagem"
+            }
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": {
+              "en": "Activity id",
+              "pt_BR": "Id da atividade"
+            }
+          }
+        }
+      },
+      "examples": {
+        "pt_BR": [
+          "concluir atividade {id}"
+        ],
+        "en": [
+          "finish island activity {id}"
+        ]
+      }
+    }
+  ]
+}

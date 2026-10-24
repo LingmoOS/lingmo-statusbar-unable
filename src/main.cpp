@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_LINGMO_INTENTS
+#include "island/islandintents.h"
+#endif
 #include <QApplication>
 #include <QTranslator>
 #include <QLocale>
@@ -84,6 +87,11 @@ int main(int argc, char *argv[])
     if (!QDBusConnection::sessionBus().registerObject("/Statusbar", &bar)) {
         return -1;
     }
+
+#ifdef HAVE_LINGMO_INTENTS
+    // island.start / update / finish on com.lingmo.Island /Intents
+    publishIslandIntents(&app);
+#endif
 
     return app.exec();
 }

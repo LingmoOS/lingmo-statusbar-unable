@@ -251,4 +251,15 @@
         <translation>Encerrar %1</translation>
     </message>
 </context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>The Island is not available.</source>
+        <translation>A Ilha não está disponível.</translation>
+    </message>
+    <message>
+        <source>Unknown activity: %1</source>
+        <translation>Atividade desconhecida: %1</translation>
+    </message>
+</context>
 </TS>
