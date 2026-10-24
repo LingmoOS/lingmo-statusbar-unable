@@ -29,10 +29,16 @@ Item {
 
     property bool available: mprisManager.availableServices.length > 0
     property bool isPlaying: currentService && mprisManager.playbackStatus === Mpris.Playing
+    property bool isPaused: currentService && mprisManager.playbackStatus === Mpris.Paused
+    property bool hasTrack: false
     property alias currentService: mprisManager.currentService
     property var artUrlTag: Mpris.metadataToString(Mpris.ArtUrl)
     property var titleTag: Mpris.metadataToString(Mpris.Title)
     property var artistTag: Mpris.metadataToString(Mpris.Artist)
+
+    // Only while a player has a track that is playing or paused: a stopped or
+    // idle player used to leave an empty card with the placeholder cover
+    visible: available && hasTrack && (isPlaying || isPaused)
 
     MprisManager {
         id: mprisManager
@@ -52,7 +58,7 @@ Item {
         var titleAvailable = (titleTag in mprisManager.metadata) ? mprisManager.metadata[titleTag].toString() !== "" : false
         var artistAvailable = (artistTag in mprisManager.metadata) ? mprisManager.metadata[artistTag].toString() !== "" : false
 
-        control.visible = titleAvailable || artistAvailable
+        control.hasTrack = titleAvailable || artistAvailable
         _songLabel.text = titleAvailable ? mprisManager.metadata[titleTag].toString() : ""
         _artistLabel.text = artistAvailable ? mprisManager.metadata[artistTag].toString() : ""
         artImage.source = (artUrlTag in mprisManager.metadata) ? mprisManager.metadata[artUrlTag].toString() : ""
@@ -60,9 +66,12 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: "white"
+        // A raised pane on the glass (solid card without glass)
+        color: LingmoUI.Theme.glassEnabled ? LingmoUI.Theme.glassRaisedColor : LingmoUI.Theme.secondBackgroundColor
+        border.width: LingmoUI.Theme.glassEnabled ? 1 : 0
+        border.color: LingmoUI.Theme.glassBorderColor
         radius: LingmoUI.Theme.bigRadius
-        opacity: LingmoUI.Theme.darkMode ? 0.2 : 0.7
+        opacity: LingmoUI.Theme.glassEnabled ? 1 : (LingmoUI.Theme.darkMode ? 0.45 : 0.7)
     }
 
     RowLayout {
@@ -128,6 +137,7 @@ Item {
 
                 Label {
                     id: _songLabel
+                    font.bold: true
                     Layout.fillWidth: true
                     visible: _songLabel.text !== ""
                     elide: Text.ElideRight
@@ -135,6 +145,7 @@ Item {
 
                 Label {
                     id: _artistLabel
+                    color: LingmoUI.Theme.disabledTextColor
                     Layout.fillWidth: true
                     visible: _artistLabel.text !== ""
                     elide: Text.ElideRight

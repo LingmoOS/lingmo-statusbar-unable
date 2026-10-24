@@ -13,12 +13,13 @@ ListView {
     layoutDirection: Qt.RightToLeft
     interactive: false
     clip: true
-    spacing: LingmoUI.Units.smallSpacing / 2
+    spacing: 0
 
-    property real itemWidth: rootItem.iconSize + LingmoUI.Units.largeSpacing
+    // Same cell as the other status icons, so the whole right side is one grid
+    property real itemWidth: rootItem.cellWidth
 
     Layout.fillHeight: true
-    Layout.preferredWidth: (itemWidth + (count - 1) * LingmoUI.Units.smallSpacing) * count
+    Layout.preferredWidth: itemWidth * count
 
     model: SystemTrayModel {
         id: trayModel
@@ -91,17 +92,6 @@ ListView {
             onTriggered: iconItem.updateIcon()
         }
 
-        ColorOverlay {
-            id: iconOverlay
-            anchors.centerIn: parent
-            width: rootItem.iconSize
-            height: width
-            source: iconItem
-            color: rootItem.textColor
-            opacity: rootItem.darkMode ? 1 : 0.7
-            visible: model.canColorOverlay
-        }
-
         LingmoUI.IconItem {
             id: iconItem
             anchors.centerIn: parent
@@ -110,7 +100,25 @@ ListView {
             source: model.iconName ? model.iconName : model.icon
             antialiasing: true
             smooth: true
-            visible: !dragStarted && !iconOverlay.visible
+            visible: !dragStarted
+        }
+
+        // Qt 6 effects can't take a QQuickPaintedItem as source directly (its texture
+        // provider is only reachable from the render thread): go through a ShaderEffectSource
+        ShaderEffectSource {
+            id: iconSource
+            anchors.fill: iconItem
+            sourceItem: iconOverlay.visible ? iconItem : null
+            hideSource: iconOverlay.visible
+            visible: false
+        }
+
+        ColorOverlay {
+            id: iconOverlay
+            anchors.fill: iconItem
+            source: iconSource
+            color: rootItem.textColor
+            visible: model.canColorOverlay && !dragStarted
         }
 
         onClicked: {

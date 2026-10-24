@@ -35,7 +35,7 @@
 #include <QMenu>
 
 // X11
-#include <QtGui/private/qtx11extras_p.h>
+#include <QGuiApplication>
 #include <xcb/xcb.h>
 
 static const QByteArray s_x11AppMenuServiceNamePropertyName = QByteArrayLiteral("_KDE_NET_WM_APPMENU_SERVICE_NAME");
@@ -95,8 +95,10 @@ AppMenu::AppMenu(QObject *parent)
         setupMenuImporter();
     // }
 
-    if (!QX11Info::connection()) {
-        m_xcbConn = xcb_connect(nullptr, nullptr);
+    m_xcbConn = xcb_connect(nullptr, nullptr);
+    if (m_xcbConn && xcb_connection_has_error(m_xcbConn)) {
+        xcb_disconnect(m_xcbConn);
+        m_xcbConn = nullptr;
     }
 }
 
@@ -122,10 +124,7 @@ bool AppMenu::eventFilter(QObject *object, QEvent *event)
 
 void AppMenu::slotWindowRegistered(WId id, const QString &serviceName, const QDBusObjectPath &menuObjectPath)
 {
-    auto *c = QX11Info::connection();
-    if (!c) {
-        c = m_xcbConn;
-    }
+    auto *c = m_xcbConn;
 
     if (c) {
         static xcb_atom_t s_serviceNameAtom = XCB_ATOM_NONE;

@@ -31,6 +31,24 @@ Notifications::Notifications(QObject *parent)
                                           "/Notification",
                                           "com.lingmo.Notification",
                                           "doNotDisturbChanged", this, SLOT(onDBusDoNotDisturbChanged()));
+
+    m_count = m_iface.property("count").toInt();
+    QDBusConnection::sessionBus().connect("com.lingmo.Notification",
+                                          "/Notification",
+                                          "com.lingmo.Notification",
+                                          "countChanged", this, SLOT(onDBusCountChanged()));
+}
+
+void Notifications::onDBusCountChanged()
+{
+    // Re-create the interface: notificationd may have started after us
+    QDBusInterface iface("com.lingmo.Notification", "/Notification",
+                         "com.lingmo.Notification", QDBusConnection::sessionBus());
+    const int count = iface.property("count").toInt();
+    if (count != m_count) {
+        m_count = count;
+        emit countChanged();
+    }
 }
 
 bool Notifications::doNotDisturb() const

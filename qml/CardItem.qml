@@ -33,17 +33,15 @@ Item {
     signal clicked
     signal pressAndHold
 
-    property var backgroundColor: LingmoUI.Theme.darkMode ? Qt.rgba(255, 255, 255, 0.1)
-                                                        : Qt.rgba(0, 0, 0, 0.05)
-    property var hoverColor: LingmoUI.Theme.darkMode ? Qt.rgba(255, 255, 255, 0.15)
-                                                   : Qt.rgba(0, 0, 0, 0.1)
-    property var pressedColor: LingmoUI.Theme.darkMode ? Qt.rgba(255, 255, 255, 0.2)
-                                                     : Qt.rgba(0, 0, 0, 0.15)
+    readonly property color _ink: LingmoUI.Theme.textColor
+    property color backgroundColor: Qt.rgba(_ink.r, _ink.g, _ink.b, 0.08)
+    property color hoverColor: Qt.rgba(_ink.r, _ink.g, _ink.b, 0.13)
+    property color pressedColor: Qt.rgba(_ink.r, _ink.g, _ink.b, 0.18)
 
-    property var highlightHoverColor: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.highlightColor, 1.1)
-                                                            : Qt.darker(LingmoUI.Theme.highlightColor, 1.1)
-    property var highlightPressedColor: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.highlightColor, 1.1)
-                                                              : Qt.darker(LingmoUI.Theme.highlightColor, 1.2)
+    property color highlightHoverColor: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.highlightColor, 1.1)
+                                                                : Qt.darker(LingmoUI.Theme.highlightColor, 1.1)
+    property color highlightPressedColor: LingmoUI.Theme.darkMode ? Qt.lighter(LingmoUI.Theme.highlightColor, 1.2)
+                                                                  : Qt.darker(LingmoUI.Theme.highlightColor, 1.2)
 
     MouseArea {
         id: _mouseArea
@@ -63,9 +61,9 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.leftMargin: LingmoUI.Theme.smallRadius
-        anchors.rightMargin: LingmoUI.Theme.smallRadius
-        spacing: LingmoUI.Units.largeSpacing
+        anchors.leftMargin: LingmoUI.Units.smallSpacing / 2
+        anchors.rightMargin: LingmoUI.Units.smallSpacing / 2
+        spacing: LingmoUI.Units.smallSpacing
 
         Item {
             Layout.fillHeight: true
@@ -73,8 +71,8 @@ Item {
 
         Item {
             id: imageItem
-            Layout.preferredWidth: 28 + LingmoUI.Units.largeSpacing * 2
-            Layout.preferredHeight: 28 + LingmoUI.Units.largeSpacing * 2
+            Layout.preferredWidth: 44
+            Layout.preferredHeight: 44
 
             Layout.alignment: Qt.AlignHCenter
 
@@ -88,7 +86,8 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: height / 2
-//                color: "#E5E5E5"
+
+                Behavior on color { ColorAnimation { duration: 120 } }
 
                 color: {
                     if (control.checked) {
@@ -111,10 +110,10 @@ Item {
 
             Image {
                 id: _image
-                Layout.preferredWidth: 28
-                Layout.preferredHeight: 28
+                width: LingmoUI.Units.iconSizes.smallMedium
+                height: width
                 anchors.centerIn: parent
-                sourceSize: Qt.size(28, 28)
+                sourceSize: Qt.size(width, height)
                 asynchronous: true
                 antialiasing: true
                 smooth: true
@@ -123,8 +122,8 @@ Item {
 
         Label {
             id: _titleLabel
-//            color: control.checked ? LingmoUI.Theme.highlightedTextColor : LingmoUI.Theme.textColor
-            Layout.preferredHeight: control.height * 0.15
+            color: LingmoUI.Theme.textColor
+            font.pointSize: LingmoUI.Theme.fontSize * 0.9
             Layout.alignment: Qt.AlignHCenter
             horizontalAlignment: Qt.AlignHCenter
             Layout.fillWidth: true

@@ -49,6 +49,8 @@ public:
     QString subtitle() const;
     QString iconName() const;
     QIcon icon() const;
+    // Symbolic (grey-scale) icons get tinted to match the bar; colored ones are left as is
+    bool isMonochrome() const;
 
     void activate(int x, int y);
     void secondaryActivate(int x, int y);
@@ -95,6 +97,7 @@ private:
     QString m_subTitle;
     QString m_iconName;
     QIcon m_icon;
+    bool m_monochrome = false;
 };
 
 #endif // STATUSNOTIFIERITEMSOURCE_H

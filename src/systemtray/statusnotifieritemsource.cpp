@@ -25,7 +25,9 @@
 
 #include "../libdbusmenuqt/dbusmenuimporter.h"
 
+#include <QColor>
 #include <QDebug>
+#include <QImage>
 #include <netinet/in.h>
 
 class TrayMenuImporter : public DBusMenuImporter
@@ -129,6 +131,31 @@ QIcon StatusNotifierItemSource::icon() const
     return m_icon;
 }
 
+bool StatusNotifierItemSource::isMonochrome() const
+{
+    return m_monochrome;
+}
+
+static bool iconIsMonochrome(const QIcon &icon)
+{
+    const QImage image = icon.pixmap(QSize(24, 24)).toImage().convertToFormat(QImage::Format_ARGB32);
+    if (image.isNull())
+        return false;
+
+    int opaque = 0, colored = 0;
+    for (int y = 0; y < image.height(); ++y) {
+        const QRgb *line = reinterpret_cast<const QRgb *>(image.constScanLine(y));
+        for (int x = 0; x < image.width(); ++x) {
+            if (qAlpha(line[x]) < 64)
+                continue;
+            ++opaque;
+            if (QColor(line[x]).hsvSaturation() > 60)
+                ++colored;
+        }
+    }
+    return opaque > 0 && colored * 10 < opaque;
+}
+
 void StatusNotifierItemSource::activate(int x, int y)
 {
     if (m_statusNotifierItemInterface && m_statusNotifierItemInterface->isValid()) {
@@ -187,6 +214,8 @@ void StatusNotifierItemSource::contextMenu(int x, int y, QQuickItem *item)
         qWarning() << "Could not find DBusMenu interface, falling back to calling ContextMenu()";
         if (m_statusNotifierItemInterface && m_statusNotifierItemInterface->isValid()) {
             m_statusNotifierItemInterface->call(QDBus::NoBlock, QStringLiteral("ContextMenu"), x, y);
+            // The item may have published its menu after we first read it
+            refresh();
         }
     }
 }
@@ -315,7 +344,10 @@ void StatusNotifierItemSource::refreshCallback(QDBusPendingCallWatcher *call)
             }
         }
 
-        // qDebug() << newTitle << newIconName << newToolTip << image.isEmpty();
+        // Prefer the themed icon; fall back to the pixmap the item sent when the theme lacks it
+        if (!m_iconName.isEmpty() && !QIcon::hasThemeIcon(m_iconName) && !m_icon.isNull())
+            m_iconName.clear();
+        m_monochrome = iconIsMonochrome(m_iconName.isEmpty() ? m_icon : QIcon::fromTheme(m_iconName));
 
         emit updated(this);
     }

@@ -7,6 +7,11 @@
         <source>Desktop</source>
         <translation type="vanished">Màn hình chính</translation>
     </message>
+    <message>
+        <location filename="../src/activity.cpp" line="198"/>
+        <source></source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>ControlCenter</name>
@@ -80,12 +85,12 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../qml/main.qml" line="103"/>
+        <location filename="../qml/main.qml" line="101"/>
         <source>Close</source>
         <translation>Đóng</translation>
     </message>
     <message>
-        <location filename="../qml/main.qml" line="282"/>
+        <location filename="../qml/main.qml" line="280"/>
         <source>is using the camera</source>
         <translation type="unfinished"></translation>
     </message>

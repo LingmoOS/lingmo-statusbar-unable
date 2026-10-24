@@ -7,5 +7,10 @@
     <method name="setTwentyFourTime">
         <arg name="t" type="b" direction="in"/>
     </method>
+    <!-- Bar height in px (24-40), saved in ~/.config/lingmoos/statusbar.conf [General] Height -->
+    <method name="setHeight">
+        <arg name="height" type="i" direction="in"/>
+    </method>
+    <property name="barHeight" type="i" access="read"/>
   </interface>
 </node>

@@ -28,21 +28,26 @@ class Notifications : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool doNotDisturb READ doNotDisturb WRITE setDoNotDisturb NOTIFY doNotDisturbChanged)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
     explicit Notifications(QObject *parent = nullptr);
 
     bool doNotDisturb() const;
+    int count() const { return m_count; }
     void setDoNotDisturb(bool enabled);
 
 private slots:
     void onDBusDoNotDisturbChanged();
+    void onDBusCountChanged();
 
 signals:
     void doNotDisturbChanged();
+    void countChanged();
 
 private:
     QDBusInterface m_iface;
+    int m_count = 0;
     bool m_doNotDisturb;
 };
 

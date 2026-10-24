@@ -78,18 +78,18 @@ Item {
             _bgRect.state = "hidden"
         }
 
-        onClicked: {
+        onClicked: function(mouse) {
             control.moveX = mouseX
             control.moveY = mouseY
             control.clicked(mouse)
         }
 
-        onPressed: {
+        onPressed: function(mouse) {
             popupTips.hide()
             control.pressed(mouse)
         }
 
-        onWheel: {
+        onWheel: function(wheel) {
             control.wheel(wheel)
             wheel.accepted = false
         }
@@ -116,6 +116,8 @@ Item {
 
     Rectangle {
         id: _bgRect
+        // A pill a little shorter than the bar, the same on every item
+        readonly property real pillHeight: Math.max(0, control.height - LingmoUI.Units.smallSpacing)
         radius: LingmoUI.Theme.smallRadius
 
         state: "hidden"
@@ -125,9 +127,9 @@ Item {
                 PropertyChanges {
                     target: _bgRect
                     x: 0
-                    y: 1
+                    y: (control.height - _bgRect.pillHeight) / 2
                     width: control.width
-                    height: control.height - 2
+                    height: _bgRect.pillHeight
                     visible: true
                 }
             },
@@ -187,17 +189,12 @@ Item {
 
         color: {
             if (backColorEnabled)
-            {
                 return backcolor
-            }
-            if (control.checked) {
-                return (rootItem.darkMode) ? Qt.rgba(255, 255, 255, 0.2) : Qt.rgba(0, 0, 0, 0.1)
-            }
 
+            const c = rootItem.textColor
             if (_mouseArea.containsPress)
-                return (rootItem.darkMode) ? Qt.rgba(255, 255, 255, 0.3) : Qt.rgba(0, 0, 0, 0.2)
-            else
-                return (rootItem.darkMode) ? Qt.rgba(255, 255, 255, 0.2) : Qt.rgba(0, 0, 0, 0.1)
+                return Qt.rgba(c.r, c.g, c.b, 0.2)
+            return Qt.rgba(c.r, c.g, c.b, control.checked ? 0.16 : 0.1)
         }
     }
 }

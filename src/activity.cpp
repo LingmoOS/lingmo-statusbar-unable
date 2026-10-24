@@ -22,7 +22,7 @@
 #include <QFile>
 #include <QCursor>
 #include <QDebug>
-#include <QtGui/private/qtx11extras_p.h>
+#include <xcb/xcb.h>
 #include <QDirIterator>
 #include <QSettings>
 #include <QRegularExpression>
@@ -34,6 +34,32 @@
 
 static const QStringList blockList = {"lingmo-launcher",
                                       "lingmo-statusbar"};
+
+static xcb_connection_t *x11Connection()
+{
+    static xcb_connection_t *conn = nullptr;
+    if (!conn) {
+        conn = xcb_connect(nullptr, nullptr);
+    }
+    if (!conn || xcb_connection_has_error(conn)) {
+        return nullptr;
+    }
+    return conn;
+}
+
+static xcb_window_t x11RootWindow()
+{
+    xcb_connection_t *conn = x11Connection();
+    if (!conn) {
+        return XCB_WINDOW_NONE;
+    }
+    const xcb_setup_t *setup = xcb_get_setup(conn);
+    if (!setup) {
+        return XCB_WINDOW_NONE;
+    }
+    xcb_screen_iterator_t it = xcb_setup_roots_iterator(setup);
+    return it.rem ? it.data->root : XCB_WINDOW_NONE;
+}
 
 Activity::Activity(QObject *parent)
     : QObject(parent)
@@ -63,7 +89,9 @@ QString Activity::icon() const
 
 void Activity::close()
 {
-    NETRootInfo(QX11Info::connection(), NET::CloseWindow).closeWindowRequest(KX11Extras::activeWindow());
+    if (auto *conn = x11Connection()) {
+        NETRootInfo(conn, NET::CloseWindow).closeWindowRequest(KX11Extras::activeWindow());
+    }
 }
 
 void Activity::minimize()
@@ -112,10 +140,12 @@ void Activity::move()
         KX11Extras::forceActiveWindow(winId);
     }
 
-    NETRootInfo ri(QX11Info::connection(), NET::WMMoveResize);
-    ri.moveResizeRequest(winId,
-                         QCursor::pos().x(),
-                         QCursor::pos().y(), NET::Move);
+    if (auto *conn = x11Connection()) {
+        NETRootInfo ri(conn, NET::WMMoveResize);
+        ri.moveResizeRequest(winId,
+                             QCursor::pos().x(),
+                             QCursor::pos().y(), NET::Move);
+    }
 }
 
 bool Activity::isAcceptableWindow(quint64 wid)
@@ -142,7 +172,7 @@ bool Activity::isAcceptableWindow(quint64 wid)
 
     // WM_TRANSIENT_FOR hint not set - normal window
     WId transFor = info.transientFor();
-    if (transFor == 0 || transFor == wid || transFor == (WId) QX11Info::appRootWindow())
+    if (transFor == 0 || transFor == wid || transFor == (WId) x11RootWindow())
         return true;
 
     info = KWindowInfo(transFor, NET::WMWindowType);
@@ -165,7 +195,7 @@ void Activity::onActiveWindowChanged()
     emit launchPadChanged();
 
     if (NET::typeMatchesMask(info.windowType(NET::AllTypesMask), NET::DesktopMask)) {
-        m_title = tr("");
+        m_title = QString();
         m_icon = "sysytemlogo";
 
         emit titleChanged();

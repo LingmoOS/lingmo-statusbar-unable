@@ -92,7 +92,7 @@ QVariant SystemTrayModel::data(const QModelIndex &index, int role) const
     case ToolTipRole:
         return item->tooltip();
     case CanColorOverlay:
-        return !noColorOverlayList.contains(item->appId());
+        return item->isMonochrome() && !noColorOverlayList.contains(item->appId());
     }
 
     return QVariant();

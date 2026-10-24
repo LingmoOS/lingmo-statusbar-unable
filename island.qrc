@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/island/Island.qml</file>
+        <file>qml/island/IslandCard.qml</file>
+        <file>qml/island/IslandCompact.qml</file>
+        <file>qml/island/IslandExpanded.qml</file>
+        <file>qml/island/IslandMedia.qml</file>
+    </qresource>
+</RCC>

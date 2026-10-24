@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_LINGMO_INTENTS
+#include "island/islandintents.h"
+#endif
 #include <QApplication>
 #include <QTranslator>
 #include <QLocale>
@@ -28,12 +31,17 @@
 #include "appmenu/appmenuapplet.h"
 #include "poweractions.h"
 #include "notifications.h"
+#include "spotlightshortcut.h"
 #include "backgroundhelper.h"
 #include "lyricshelper.h"
 #include "permissionsurveillance.h"
 #include "appearance.h"
 #include "brightness.h"
 #include "battery.h"
+#include "nightlight.h"
+#include "keyboardlayout.h"
+#include "powerprofiles.h"
+#include "island/islandmanager.h"
 
 int main(int argc, char *argv[])
 {
@@ -51,9 +59,14 @@ int main(int argc, char *argv[])
     qmlRegisterType<AppMenuApplet>(uri, 1, 0, "AppMenuApplet");
     qmlRegisterType<PowerActions>(uri, 1, 0, "PowerActions");
     qmlRegisterType<Notifications>(uri, 1, 0, "Notifications");
+    qmlRegisterType<SpotlightShortcut>(uri, 1, 0, "SpotlightShortcut");
     qmlRegisterType<LyricsHelper>(uri, 1, 0, "LyricsHelper");
     qmlRegisterType<BackgroundHelper>(uri, 1, 0, "BackgroundHelper");
     qmlRegisterType<PermissionSurveillance>(uri, 1, 0, "PermissionSurveillance");
+    qmlRegisterType<NightLight>(uri, 1, 0, "NightLight");
+    qmlRegisterType<KeyboardLayout>(uri, 1, 0, "KeyboardLayout");
+    qmlRegisterType<PowerProfiles>(uri, 1, 0, "PowerProfiles");
+    qmlRegisterType<IslandManager>(uri, 1, 0, "IslandManager");
 
     QString qmFilePath = QString("%1/%2.qm").arg("/usr/share/lingmo-statusbar/translations/").arg(QLocale::system().name());
     if (QFile::exists(qmFilePath)) {
@@ -74,6 +87,11 @@ int main(int argc, char *argv[])
     if (!QDBusConnection::sessionBus().registerObject("/Statusbar", &bar)) {
         return -1;
     }
+
+#ifdef HAVE_LINGMO_INTENTS
+    // island.start / update / finish on com.lingmo.Island /Intents
+    publishIslandIntents(&app);
+#endif
 
     return app.exec();
 }

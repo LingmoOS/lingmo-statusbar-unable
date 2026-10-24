@@ -30,9 +30,6 @@
 #include <QDBusServiceWatcher>
 #include <QGuiApplication>
 #include <QMenu>
-
-#include <QtGui/private/qtx11extras_p.h>
-
 #include <KWindowSystem>
 #include <KX11Extras>
 
@@ -41,10 +38,25 @@
 
 #include <xcb/xcb.h>
 
+static xcb_connection_t *x11Connection()
+{
+    static xcb_connection_t *conn = nullptr;
+    if (!conn) {
+        conn = xcb_connect(nullptr, nullptr);
+    }
+    if (!conn || xcb_connection_has_error(conn)) {
+        return nullptr;
+    }
+    return conn;
+}
+
 static QByteArray getWindowPropertyString(WId id, const QByteArray &name)
 {
-    xcb_connection_t *c = QX11Info::connection();
+    xcb_connection_t *c = x11Connection();
     QByteArray value;
+    if (!c) {
+        return value;
+    }
 
     const xcb_intern_atom_cookie_t atomCookie = xcb_intern_atom(c, false, name.length(), name.constData());
     QScopedPointer<xcb_intern_atom_reply_t, QScopedPointerPodDeleter> atomReply(xcb_intern_atom_reply(c, atomCookie, Q_NULLPTR));

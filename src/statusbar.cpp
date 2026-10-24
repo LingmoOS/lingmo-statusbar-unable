@@ -37,12 +37,19 @@
 #include <KX11Extras>
 #include <KWindowEffects>
 
+static const int s_defaultHeight = 28;
+static const int s_minHeight = 24;
+static const int s_maxHeight = 40;
+
 StatusBar::StatusBar(QQuickView *parent)
     : QQuickView(parent)
     , m_acticity(new Activity)
 {
     QSettings settings("lingmoos", "locale");
     m_twentyFourTime = settings.value("twentyFour", false).toBool();
+
+    QSettings barSettings(QSettings::UserScope, "lingmoos", "statusbar");
+    m_barHeight = qBound(s_minHeight, barSettings.value("Height", s_defaultHeight).toInt(), s_maxHeight);
 
     setFlags(Qt::FramelessWindowHint | Qt::WindowDoesNotAcceptFocus);
     setColor(Qt::transparent);
@@ -69,11 +76,44 @@ StatusBar::StatusBar(QQuickView *parent)
 
     connect(m_acticity, &Activity::launchPadChanged, this, &StatusBar::initState);
 
-    connect(screen(), &QScreen::virtualGeometryChanged, this, &StatusBar::updateGeometry);
-    connect(screen(), &QScreen::geometryChanged, this, &StatusBar::updateGeometry);
+    // Always on the primary screen. Monitors moved, rotated, plugged in or made primary
+    // change several screens at once, and KWin may move the bar while they settle
+    // (which makes Qt think it now lives on another screen), so every such change
+    // just schedules one look at where the primary screen is now.
+    m_relayout = new QTimer(this);
+    m_relayout->setSingleShot(true);
+    m_relayout->setInterval(250);
+    connect(m_relayout, &QTimer::timeout, this, &StatusBar::followPrimaryScreen);
 
-    // Always show on the main screen
     connect(qGuiApp, &QGuiApplication::primaryScreenChanged, this, &StatusBar::onPrimaryScreenChanged);
+    connect(qGuiApp, &QGuiApplication::screenAdded, this, [this](QScreen *screen) {
+        watchScreen(screen);
+        m_relayout->start();
+    });
+    connect(qGuiApp, &QGuiApplication::screenRemoved, m_relayout, qOverload<>(&QTimer::start));
+    connect(this, &QWindow::screenChanged, m_relayout, qOverload<>(&QTimer::start));
+    for (QScreen *screen : qGuiApp->screens())
+        watchScreen(screen);
+
+    // The primary screen may have changed while the QML above was loading: the session
+    // runs autostart entries (xrandr layouts, ...) as soon as the desktop is up
+    followPrimaryScreen();
+}
+
+void StatusBar::watchScreen(QScreen *screen)
+{
+    connect(screen, &QScreen::geometryChanged, m_relayout, qOverload<>(&QTimer::start));
+    connect(screen, &QScreen::virtualGeometryChanged, m_relayout, qOverload<>(&QTimer::start));
+}
+
+void StatusBar::followPrimaryScreen()
+{
+    QScreen *primary = qApp->primaryScreen();
+    if (!primary)
+        return;
+    if (screen() != primary)
+        setScreen(primary);
+    updateGeometry();
 }
 
 QRect StatusBar::screenRect()
@@ -99,27 +139,43 @@ void StatusBar::setTwentyFourTime(bool t)
     }
 }
 
+void StatusBar::setHeight(int height)
+{
+    height = qBound(s_minHeight, height, s_maxHeight);
+    if (height == m_barHeight)
+        return;
+
+    m_barHeight = height;
+    QSettings barSettings(QSettings::UserScope, "lingmoos", "statusbar");
+    barSettings.setValue("Height", height);
+    emit barHeightChanged();
+    updateGeometry();
+}
+
 void StatusBar::updateGeometry()
 {
-    const QRect rect = screen()->geometry();
+    // The primary screen's, not screen(): Qt moves that to whichever screen the
+    // window happens to be over
+    QScreen *primary = qApp->primaryScreen() ? qApp->primaryScreen() : screen();
+    const QRect rect = primary->geometry();
 
     if (m_screenRect != rect) {
         m_screenRect = rect;
         emit screenRectChanged();
     }
 
-    QRect windowRect = QRect(rect.x(), rect.y(), rect.width(), 25);
+    QRect windowRect = QRect(rect.x(), rect.y(), rect.width(), m_barHeight);
     setGeometry(windowRect);
     updateViewStruts();
-
-    KWindowEffects::enableBlurBehind(fromWinId(winId()), true);
+    // The blur behind the bar is asked for by its glass (qml/main.qml,
+    // LingmoUI.GlassSurface), which drops it with Glass off or no compositor
 }
 
 void StatusBar::updateViewStruts()
 {
-    const QRect wholeScreen(QPoint(0, 0), screen()->virtualSize());
+    const QRect wholeScreen(QPoint(0, 0), (qApp->primaryScreen() ? qApp->primaryScreen() : screen())->virtualSize());
     const QRect rect = geometry();
-    const int topOffset = screen()->geometry().top();
+    const int topOffset = (qApp->primaryScreen() ? qApp->primaryScreen() : screen())->geometry().top();
 
     NETExtendedStrut strut;
     strut.top_width = rect.height() + topOffset - 1;
@@ -147,13 +203,7 @@ void StatusBar::initState()
     KX11Extras::setState(winId(), m_acticity->launchPad() ? NET::KeepBelow : NET::KeepAbove);
 }
 
-void StatusBar::onPrimaryScreenChanged(QScreen *screen)
+void StatusBar::onPrimaryScreenChanged(QScreen *)
 {
-    disconnect(this->screen());
-
-    setScreen(screen);
-    updateGeometry();
-
-    connect(screen, &QScreen::virtualGeometryChanged, this, &StatusBar::updateGeometry);
-    connect(screen, &QScreen::geometryChanged, this, &StatusBar::updateGeometry);
+    m_relayout->start();
 }
